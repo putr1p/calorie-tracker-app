@@ -51,17 +51,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, calories, date } = await request.json();
+    const { name, calories, imageUrl } = await request.json();
 
-    if (!name || !calories || !date) {
-      return NextResponse.json({ error: 'Name, calories, and date are required' }, { status: 400 });
+    if (!name || !calories) {
+      return NextResponse.json({ error: 'Name and calories are required' }, { status: 400 });
     }
 
     if (isNaN(calories) || calories <= 0) {
       return NextResponse.json({ error: 'Calories must be a positive number' }, { status: 400 });
     }
 
-    const mealId = createMeal(userId, name, calories, date);
+    // Create meal with automatic timestamping
+    const mealId = createMeal(userId, name, calories, imageUrl);
     const meals = getMealsByUserId(userId) as any[];
     const meal = meals.find(m => m.id === mealId);
     return NextResponse.json(meal, { status: 201 });

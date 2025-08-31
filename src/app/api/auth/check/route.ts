@@ -35,7 +35,7 @@ export async function GET() {
       user: { id: user.id, username: user.username }
     });
   } catch (error) {
-    console.error('Auth check error:', error);
+    console.error('🚨 Server: Auth check error:', error);
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 }

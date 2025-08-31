@@ -18,10 +18,10 @@ export default function CalorieChart() {
   }, [meals]);
 
   const generateChartData = () => {
-    // Group meals by date and sum calories
+    // Group meals by date and sum calories (using the created_at timestamp)
     const dailyCalories: { [key: string]: number } = {};
     meals.forEach((meal) => {
-      const dateKey = meal.date;
+      const dateKey = new Date(meal.created_at).toISOString().split('T')[0];
       dailyCalories[dateKey] = (dailyCalories[dateKey] || 0) + meal.calories;
     });
 

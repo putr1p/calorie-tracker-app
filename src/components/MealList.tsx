@@ -2,8 +2,14 @@
 
 import { useMeals } from '@/contexts/MealsContext';
 
-export default function MealList() {
-  const { meals, loading, deleteMeal } = useMeals();
+interface MealListProps {
+  showTodaysMeals?: boolean;
+}
+
+export default function MealList({ showTodaysMeals = false }: MealListProps) {
+  const { meals, todaysMeals, loading, deleteMeal } = useMeals();
+
+  const displayMeals = showTodaysMeals ? todaysMeals : meals;
 
   const handleDelete = async (mealId: number) => {
     try {
@@ -13,30 +19,46 @@ export default function MealList() {
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString();
+  const formatDateTime = (dateTime: string) => {
+    return new Date(dateTime).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Meals</h2>
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
       {loading ? (
-        <p className="text-gray-500">Loading meals...</p>
-      ) : meals.length === 0 ? (
-        <p className="text-gray-500">No meals logged yet.</p>
+        <p className="text-gray-500 text-center py-8">Loading meals...</p>
+      ) : displayMeals.length === 0 ? (
+        <p className="text-gray-500 text-center py-8">
+          {showTodaysMeals ? "No meals logged today yet." : "No meals logged yet."}
+        </p>
       ) : (
-        <div className="space-y-4">
-          {meals.map((meal) => (
-            <div key={meal.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">{meal.name}</h3>
-                <p className="text-sm text-gray-500">{formatDate(meal.date)}</p>
+        <div className="space-y-3 sm:space-y-4">
+          {displayMeals.map((meal) => (
+            <div key={meal.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-md gap-3 sm:gap-4">
+              <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                {meal.image_url && (
+                  <img
+                    src={meal.image_url}
+                    alt={meal.name}
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-md border border-gray-300 flex-shrink-0"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-medium text-gray-900 truncate">{meal.name}</h3>
+                  <p className="text-xs sm:text-sm text-gray-500">Logged: {formatDateTime(meal.created_at)}</p>
+                </div>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4 flex-shrink-0">
                 <span className="text-sm font-medium text-gray-900">{meal.calories} cal</span>
                 <button
                   onClick={() => handleDelete(meal.id)}
-                  className="text-red-600 hover:text-red-900 text-sm font-medium"
+                  className="text-red-600 hover:text-red-900 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"
                 >
                   Delete
                 </button>

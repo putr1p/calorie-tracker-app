@@ -7,6 +7,7 @@ interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<boolean>;
   register: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +29,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: false,
     user: null,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is authenticated by making a request to a protected endpoint
@@ -60,11 +62,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      console.error('🚨 Auth check error:', error);
       setAuthState({
         isAuthenticated: false,
         user: null,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -138,7 +142,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, register, logout }}>
+    <AuthContext.Provider value={{ ...authState, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

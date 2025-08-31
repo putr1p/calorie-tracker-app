@@ -5,7 +5,7 @@ import path from 'path';
 const dbPath = path.join(process.cwd(), 'calorie_tracker.db');
 const db = new Database(dbPath);
 
-// Create tables
+// Create tables if they don't exist - preserves existing data
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,11 +19,18 @@ db.exec(`
     user_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     calories INTEGER NOT NULL,
-    date DATE NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    image_url TEXT,
     FOREIGN KEY (user_id) REFERENCES users (id)
   );
 `);
+
+// Add image_url column to existing meals table if it doesn't exist
+try {
+  db.exec(`ALTER TABLE meals ADD COLUMN image_url TEXT;`);
+} catch (error) {
+  // Column might already exist, ignore error
+}
 
 // User operations
 export const createUser = (username: string, password: string) => {
@@ -43,14 +50,14 @@ export const getUserById = (id: number) => {
 };
 
 // Meal operations
-export const createMeal = (userId: number, name: string, calories: number, date: string) => {
-  const stmt = db.prepare('INSERT INTO meals (user_id, name, calories, date) VALUES (?, ?, ?, ?)');
-  const result = stmt.run(userId, name, calories, date);
+export const createMeal = (userId: number, name: string, calories: number, imageUrl?: string | null) => {
+  const stmt = db.prepare('INSERT INTO meals (user_id, name, calories, created_at, image_url) VALUES (?, ?, ?, ?, ?)');
+  const result = stmt.run(userId, name, calories, new Date().toISOString(), imageUrl || null);
   return result.lastInsertRowid;
 };
 
 export const getMealsByUserId = (userId: number) => {
-  const stmt = db.prepare('SELECT * FROM meals WHERE user_id = ? ORDER BY date DESC, created_at DESC');
+  const stmt = db.prepare('SELECT * FROM meals WHERE user_id = ? ORDER BY created_at DESC');
   return stmt.all(userId);
 };
 
@@ -60,6 +67,6 @@ export const deleteMeal = (mealId: number, userId: number) => {
 };
 
 export const getMealsByUserAndDateRange = (userId: number, startDate: string, endDate: string) => {
-  const stmt = db.prepare('SELECT * FROM meals WHERE user_id = ? AND date BETWEEN ? AND ? ORDER BY date DESC');
+  const stmt = db.prepare('SELECT * FROM meals WHERE user_id = ? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC');
   return stmt.all(userId, startDate, endDate);
 };

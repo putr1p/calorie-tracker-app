@@ -1,17 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import MealForm from '@/components/MealForm';
-import MealList from '@/components/MealList';
+import CalorieChart from '@/components/CalorieChart';
+import Chatbot from '@/components/Chatbot';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-export default function DashboardPage() {
-  const { isAuthenticated, user, logout, isLoading } = useAuth();
+export default function AnalysisPage() {
+  const { isAuthenticated, user, isLoading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('meals');
 
   useEffect(() => {
     // Only redirect after we've finished checking authentication
@@ -25,7 +24,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">Calorie Tracker</h1>
-          <p className="text-gray-600 mt-2">Loading your dashboard...</p>
+          <p className="text-gray-600 mt-2">Loading analysis...</p>
         </div>
       </div>
     );
@@ -41,25 +40,24 @@ export default function DashboardPage() {
 
       <main className="flex-grow container mx-auto px-4 py-6 sm:px-6 lg:px-8 max-w-7xl">
         <div className="w-full">
-          {/* Page Title */}
           <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Meal Dashboard</h2>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Log your meals and track your calorie intake</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Calorie Analysis</h2>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">View your calorie trends and patterns</p>
           </div>
 
-          {/* Meals Content - 2 Column Layout */}
+          {/* Analysis Content - 2 Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column: Today's Meals */}
+            {/* Left Column: Calorie Chart */}
             <div>
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Today's Meals</h3>
-                <MealList showTodaysMeals={true} />
+              <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Calorie Trends</h3>
+                <CalorieChart />
               </div>
             </div>
 
-            {/* Right Column: Add Meal Form */}
+            {/* Right Column: Chatbot */}
             <div>
-              <MealForm />
+              <Chatbot />
             </div>
           </div>
         </div>

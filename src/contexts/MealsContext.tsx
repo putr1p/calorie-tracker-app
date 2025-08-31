@@ -8,14 +8,15 @@ interface Meal {
   user_id: number;
   name: string;
   calories: number;
-  date: string;
   created_at: string;
+  image_url?: string;
 }
 
 interface MealsContextType {
   meals: Meal[];
+  todaysMeals: Meal[];
   loading: boolean;
-  addMeal: (name: string, calories: number, date: string) => Promise<void>;
+  addMeal: (name: string, calories: number, imageUrl?: string | null) => Promise<void>;
   deleteMeal: (mealId: number) => Promise<void>;
   refreshMeals: () => Promise<void>;
 }
@@ -37,6 +38,7 @@ interface MealsProviderProps {
 export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [todaysMeals, setTodaysMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMeals = async () => {
@@ -49,7 +51,17 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setMeals(data.sort((a: Meal, b: Meal) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        const sortedMeals = data.sort((a: Meal, b: Meal) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setMeals(sortedMeals);
+
+        // Filter today's meals
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        const todaysMealsFiltered = sortedMeals.filter((meal: Meal) => {
+          const mealDate = new Date(meal.created_at).toISOString().split('T')[0];
+          return mealDate === todayString;
+        });
+        setTodaysMeals(todaysMealsFiltered);
       }
     } catch (error) {
       console.error('Error fetching meals:', error);
@@ -58,21 +70,30 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
     }
   };
 
-  const addMeal = async (name: string, calories: number, date: string) => {
+  const addMeal = async (name: string, calories: number, imageUrl?: string | null) => {
     try {
+      console.log('Adding meal:', { name, calories, imageUrl });
       const response = await fetch('/api/meals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ name, calories, date }),
+        body: JSON.stringify({ name, calories, imageUrl }),
       });
-
       if (response.ok) {
         const newMeal = await response.json();
+        console.log("Added meal, response:", newMeal);
         // Add the new meal to the state
         setMeals(prevMeals => [newMeal, ...prevMeals]);
+
+        // Update today's meals if the new meal is from today
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+        const mealDate = new Date(newMeal.created_at).toISOString().split('T')[0];
+        if (mealDate === todayString) {
+          setTodaysMeals(prevTodaysMeals => [newMeal, ...prevTodaysMeals]);
+        }
       } else {
         throw new Error('Failed to add meal');
       }
@@ -90,7 +111,9 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
       });
 
       if (response.ok) {
+        // Update both meals and todaysMeals arrays
         setMeals(prevMeals => prevMeals.filter(meal => meal.id !== mealId));
+        setTodaysMeals(prevTodaysMeals => prevTodaysMeals.filter(meal => meal.id !== mealId));
       } else {
         throw new Error('Failed to delete meal');
       }
@@ -116,6 +139,7 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
   return (
     <MealsContext.Provider value={{
       meals,
+      todaysMeals,
       loading,
       addMeal,
       deleteMeal,

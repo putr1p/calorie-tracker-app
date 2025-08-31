@@ -6,12 +6,11 @@ export interface User {
 }
 
 export interface Meal {
-  id: string;
-  userId: string;
+  id: number;
+  user_id: number;
   name: string;
   calories: number;
-  date: Date;
-  createdAt: Date;
+  created_at: string;
 }
 
 export interface AuthState {
