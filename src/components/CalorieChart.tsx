@@ -18,19 +18,28 @@ export default function CalorieChart() {
   }, [meals]);
 
   const generateChartData = () => {
-    // Group meals by date and sum calories (using the created_at timestamp)
+    // Group meals by date and sum calories (using local timezone)
     const dailyCalories: { [key: string]: number } = {};
     meals.forEach((meal) => {
-      const dateKey = new Date(meal.created_at).toISOString().split('T')[0];
+      const mealDate = new Date(meal.created_at);
+      // Use local date components to avoid timezone conversion issues
+      const year = mealDate.getFullYear();
+      const month = String(mealDate.getMonth() + 1).padStart(2, '0');
+      const day = String(mealDate.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
       dailyCalories[dateKey] = (dailyCalories[dateKey] || 0) + meal.calories;
     });
 
-    // Get last 7 days
+    // Get last 7 days in local timezone
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateKey = date.toISOString().split('T')[0];
+      // Use local date components for consistency
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
       last7Days.push({
         date: dateKey,
         label: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),

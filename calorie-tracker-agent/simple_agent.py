@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import json
+import sys
 from mcp_client import MCPClient
 from ollama_client import OllamaClient
 from datetime import datetime
@@ -185,16 +186,37 @@ Provide a helpful response. If this is about meals, suggest they ask about speci
         logger.info("Calorie Tracker Agent cleanup completed")
 
 async def main():
-    # Initialize Calorie Tracker Agent with MCP server connection
-    agent = CalorieTrackerAgent()
+    # Check if running with command line arguments (non-interactive mode)
+    if len(sys.argv) > 2:
+        query = sys.argv[1]
+        user_id = sys.argv[2]
 
-    try:
-        await agent.initialize()
-        await agent.run_interactive()
-    except Exception as e:
-        logger.error(f"Calorie Tracker Agent error: {e}")
-    finally:
-        await agent.cleanup()
+        # Initialize Calorie Tracker Agent with MCP server connection
+        agent = CalorieTrackerAgent()
+
+        try:
+            await agent.initialize()
+            response = await agent.process_query(query)
+            print(response)  # Output response to stdout
+        except Exception as e:
+            logger.error(f"Calorie Tracker Agent error: {e}")
+            print(f"Error: {e}")  # Output error to stdout
+            sys.exit(1)
+        finally:
+            await agent.cleanup()
+    else:
+        # Interactive mode
+        # Initialize Calorie Tracker Agent with MCP server connection
+        agent = CalorieTrackerAgent()
+
+        try:
+            await agent.initialize()
+            await agent.run_interactive()
+        except Exception as e:
+            logger.error(f"Calorie Tracker Agent error: {e}")
+        finally:
+            await agent.cleanup()
 
 if __name__ == "__main__":
+    import sys
     asyncio.run(main())

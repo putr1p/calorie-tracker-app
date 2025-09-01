@@ -33,21 +33,54 @@ export default function Chatbot() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage;
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot response delay
-    setTimeout(() => {
-      const botMessage: Message = {
+    try {
+      // Send query to agent API
+      const response = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ query: currentMessage }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Success - add bot response
+        const botMessage: Message = {
+          id: messages.length + 2,
+          text: data.response,
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        // Error - show error message
+        const errorMessage: Message = {
+          id: messages.length + 2,
+          text: `Sorry, I encountered an error: ${data.error}`,
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('Chatbot API error:', error);
+      const errorMessage: Message = {
         id: messages.length + 2,
-        text: "Hi! I am Cal Counter Chatbot, happy to help",
+        text: "Sorry, I'm having trouble connecting to my brain right now. Please try again later.",
         sender: 'bot',
         timestamp: new Date()
       };
-
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

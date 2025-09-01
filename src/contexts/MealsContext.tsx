@@ -54,12 +54,20 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
         const sortedMeals = data.sort((a: Meal, b: Meal) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setMeals(sortedMeals);
 
-        // Filter today's meals
+        // Filter today's meals using local date
         const today = new Date();
-        const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+        const todayYear = today.getFullYear();
+        const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+        const todayDay = String(today.getDate()).padStart(2, '0');
+        const todayString = `${todayYear}-${todayMonth}-${todayDay}`;
+
         const todaysMealsFiltered = sortedMeals.filter((meal: Meal) => {
-          const mealDate = new Date(meal.created_at).toISOString().split('T')[0];
-          return mealDate === todayString;
+          const mealDate = new Date(meal.created_at);
+          const mealYear = mealDate.getFullYear();
+          const mealMonth = String(mealDate.getMonth() + 1).padStart(2, '0');
+          const mealDay = String(mealDate.getDate()).padStart(2, '0');
+          const mealDateString = `${mealYear}-${mealMonth}-${mealDay}`;
+          return mealDateString === todayString;
         });
         setTodaysMeals(todaysMealsFiltered);
       }
@@ -87,11 +95,20 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
         // Add the new meal to the state
         setMeals(prevMeals => [newMeal, ...prevMeals]);
 
-        // Update today's meals if the new meal is from today
+        // Update today's meals if the new meal is from today (using local date)
         const today = new Date();
-        const todayString = today.toISOString().split('T')[0];
-        const mealDate = new Date(newMeal.created_at).toISOString().split('T')[0];
-        if (mealDate === todayString) {
+        const todayYear = today.getFullYear();
+        const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+        const todayDay = String(today.getDate()).padStart(2, '0');
+        const todayString = `${todayYear}-${todayMonth}-${todayDay}`;
+
+        const mealDate = new Date(newMeal.created_at);
+        const mealYear = mealDate.getFullYear();
+        const mealMonth = String(mealDate.getMonth() + 1).padStart(2, '0');
+        const mealDay = String(mealDate.getDate()).padStart(2, '0');
+        const mealDateString = `${mealYear}-${mealMonth}-${mealDay}`;
+
+        if (mealDateString === todayString) {
           setTodaysMeals(prevTodaysMeals => [newMeal, ...prevTodaysMeals]);
         }
       } else {

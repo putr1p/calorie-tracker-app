@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 class MCPClient:
-    def __init__(self, host: str = '127.0.0.1', port: int = 3001):
+    def __init__(self, host: str = '127.0.0.1', port: int = 3002):
         self.host = host
         self.port = port
         self.reader: Optional[asyncio.StreamReader] = None

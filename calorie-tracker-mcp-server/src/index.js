@@ -23,7 +23,7 @@ try {
 }
 
 // TCP Server setup
-const PORT = process.env.MCP_PORT || 3001;
+const PORT = process.env.MCP_PORT ;
 const HOST = '127.0.0.1';
 
 const server = net.createServer((socket) => {
