@@ -1,0 +1,22 @@
+{
+  "name": "calorie-tracker-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for calorie tracker data analysis",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "test": "python test_server.py",
+    "test:manual": "node test_manual.js",
+    "test:integration": "python test_server.py",
+    "test:all": "npm run test:manual && npm run test:integration"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "better-sqlite3": "^12.2.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20"
+  }
+}
