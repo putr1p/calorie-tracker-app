@@ -8,6 +8,9 @@ interface Meal {
   user_id: number;
   name: string;
   calories: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
   created_at: string;
   image_url?: string;
 }
@@ -16,7 +19,7 @@ interface MealsContextType {
   meals: Meal[];
   todaysMeals: Meal[];
   loading: boolean;
-  addMeal: (name: string, calories: number, imageUrl?: string | null) => Promise<void>;
+  addMeal: (name: string, calories: number, protein?: number | null, carbs?: number | null, fats?: number | null, imageUrl?: string | null) => Promise<void>;
   deleteMeal: (mealId: number) => Promise<void>;
   refreshMeals: () => Promise<void>;
 }
@@ -78,16 +81,16 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
     }
   };
 
-  const addMeal = async (name: string, calories: number, imageUrl?: string | null) => {
+  const addMeal = async (name: string, calories: number, protein?: number | null, carbs?: number | null, fats?: number | null, imageUrl?: string | null) => {
     try {
-      console.log('Adding meal:', { name, calories, imageUrl });
+      console.log('Adding meal:', { name, calories, protein, carbs, fats, imageUrl });
       const response = await fetch('/api/meals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ name, calories, imageUrl }),
+        body: JSON.stringify({ name, calories, protein, carbs, fats, imageUrl }),
       });
       if (response.ok) {
         const newMeal = await response.json();

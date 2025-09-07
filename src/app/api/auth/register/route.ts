@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser, getUserByUsername } from '@/lib/db';
+import { generateToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +23,11 @@ export async function POST(request: NextRequest) {
     // Create user
     const userId = createUser(username, password);
 
-    // Create session token
-    const token = `session_${userId}_${Date.now()}`;
+    // Create JWT token
+    const token = generateToken({
+      userId: Number(userId),
+      username: username
+    });
 
     const response = NextResponse.json({
       user: { id: userId, username },

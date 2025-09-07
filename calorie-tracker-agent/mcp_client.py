@@ -6,9 +6,10 @@ from typing import Dict, Any, Optional
 logger = logging.getLogger(__name__)
 
 class MCPClient:
-    def __init__(self, host: str = '127.0.0.1', port: int = 3002):
+    def __init__(self, host: str = '127.0.0.1', port: int = 3001, jwt_token: Optional[str] = None):
         self.host = host
         self.port = port
+        self.jwt_token = jwt_token
         self.reader: Optional[asyncio.StreamReader] = None
         self.writer: Optional[asyncio.StreamWriter] = None
         self.request_id = 0
@@ -62,6 +63,12 @@ class MCPClient:
                 "arguments": arguments
             }
         }
+
+        # Add JWT authentication header if token is provided
+        if self.jwt_token:
+            request["headers"] = {
+                "authorization": f"Bearer {self.jwt_token}"
+            }
 
         # Send request
         request_json = json.dumps(request) + "\n"

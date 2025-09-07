@@ -2,30 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
 import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/jwt';
 
-// Helper function to get user from session
-async function getUserFromSession() {
+// Helper function to get user from JWT
+async function getUserFromJWT() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
 
-  if (!token || !token.startsWith('session_')) {
+  if (!token) {
     return null;
   }
 
-  const parts = token.split('_');
-  if (parts.length !== 3) {
-    return null;
-  }
-
-  const userId = parseInt(parts[1]);
-  return userId;
+  const decoded = verifyToken(token);
+  return decoded ? decoded.userId : null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Get authenticated user
-    const userId = await getUserFromSession();
-    if (!userId) {
+    // Get JWT token for authentication
+    const cookieStore = await cookies();
+    const jwtToken = cookieStore.get('auth-token')?.value;
+
+    if (!jwtToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -38,8 +36,8 @@ export async function POST(request: NextRequest) {
     // Path to the Python agent script
     const agentPath = path.join(process.cwd(), 'calorie-tracker-agent', 'simple_agent.py');
 
-    // Spawn Python process with query and user_id as arguments
-    const pythonProcess = spawn('python', [agentPath, query, userId.toString()], {
+    // Spawn Python process with query and JWT token as arguments
+    const pythonProcess = spawn('python', [agentPath, query, '1', jwtToken], {
       cwd: path.join(process.cwd(), 'calorie-tracker-agent'),
       stdio: ['pipe', 'pipe', 'pipe']
     });

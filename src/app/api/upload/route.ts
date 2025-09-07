@@ -2,28 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/jwt';
 
-// Helper function to get user from session
-async function getUserFromSession() {
+// Helper function to get user from JWT
+async function getUserFromJWT() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
 
-  if (!token || !token.startsWith('session_')) {
+  if (!token) {
     return null;
   }
 
-  const parts = token.split('_');
-  if (parts.length !== 3) {
-    return null;
-  }
-
-  const userId = parseInt(parts[1]);
-  return userId;
+  const decoded = verifyToken(token);
+  return decoded ? decoded.userId : null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserFromSession();
+    const userId = await getUserFromJWT();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserById } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { verifyToken } from '@/lib/jwt';
 
 interface User {
   id: number;
@@ -14,18 +15,16 @@ export async function GET() {
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
 
-    if (!token || !token.startsWith('session_')) {
+    if (!token) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
-    const parts = token.split('_');
-    if (parts.length !== 3) {
+    const decoded = verifyToken(token);
+    if (!decoded) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
-    const userId = parseInt(parts[1]);
-    const user = getUserById(userId) as User | undefined;
-
+    const user = getUserById(decoded.userId) as User | undefined;
     if (!user) {
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }

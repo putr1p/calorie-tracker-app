@@ -19,6 +19,9 @@ db.exec(`
     user_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     calories INTEGER NOT NULL,
+    protein REAL,
+    carbs REAL,
+    fats REAL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     image_url TEXT,
     FOREIGN KEY (user_id) REFERENCES users (id)
@@ -28,6 +31,25 @@ db.exec(`
 // Add image_url column to existing meals table if it doesn't exist
 try {
   db.exec(`ALTER TABLE meals ADD COLUMN image_url TEXT;`);
+} catch (error) {
+  // Column might already exist, ignore error
+}
+
+// Add macro columns to existing meals table if they don't exist
+try {
+  db.exec(`ALTER TABLE meals ADD COLUMN protein REAL;`);
+} catch (error) {
+  // Column might already exist, ignore error
+}
+
+try {
+  db.exec(`ALTER TABLE meals ADD COLUMN carbs REAL;`);
+} catch (error) {
+  // Column might already exist, ignore error
+}
+
+try {
+  db.exec(`ALTER TABLE meals ADD COLUMN fats REAL;`);
 } catch (error) {
   // Column might already exist, ignore error
 }
@@ -50,9 +72,9 @@ export const getUserById = (id: number) => {
 };
 
 // Meal operations
-export const createMeal = (userId: number, name: string, calories: number, imageUrl?: string | null) => {
-  const stmt = db.prepare('INSERT INTO meals (user_id, name, calories, created_at, image_url) VALUES (?, ?, ?, ?, ?)');
-  const result = stmt.run(userId, name, calories, new Date().toISOString(), imageUrl || null);
+export const createMeal = (userId: number, name: string, calories: number, protein?: number | null, carbs?: number | null, fats?: number | null, imageUrl?: string | null) => {
+  const stmt = db.prepare('INSERT INTO meals (user_id, name, calories, protein, carbs, fats, created_at, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  const result = stmt.run(userId, name, calories, protein || null, carbs || null, fats || null, new Date().toISOString(), imageUrl || null);
   return result.lastInsertRowid;
 };
 

@@ -8,6 +8,9 @@ interface Meal {
   user_id: number;
   name: string;
   calories: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
   created_at: string;
   image_url?: string;
 }
@@ -51,6 +54,31 @@ export default function MealAnalysis() {
     return meals.length > 0 ? Math.round(totalCalories / meals.length) : 0;
   }, [meals, totalCalories]);
 
+  // Calculate macro totals
+  const totalProtein = useMemo(() => {
+    return meals.reduce((sum, meal) => sum + (meal.protein || 0), 0);
+  }, [meals]);
+
+  const totalCarbs = useMemo(() => {
+    return meals.reduce((sum, meal) => sum + (meal.carbs || 0), 0);
+  }, [meals]);
+
+  const totalFats = useMemo(() => {
+    return meals.reduce((sum, meal) => sum + (meal.fats || 0), 0);
+  }, [meals]);
+
+  const averageProteinPerMeal = useMemo(() => {
+    return meals.length > 0 ? Math.round((totalProtein / meals.length) * 10) / 10 : 0;
+  }, [meals, totalProtein]);
+
+  const averageCarbsPerMeal = useMemo(() => {
+    return meals.length > 0 ? Math.round((totalCarbs / meals.length) * 10) / 10 : 0;
+  }, [meals, totalCarbs]);
+
+  const averageFatsPerMeal = useMemo(() => {
+    return meals.length > 0 ? Math.round((totalFats / meals.length) * 10) / 10 : 0;
+  }, [meals, totalFats]);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -71,7 +99,7 @@ export default function MealAnalysis() {
     <div className="bg-white rounded-lg shadow p-4 sm:p-6">
       <div className="mb-6">
         <h3 className="text-lg font-medium text-gray-900 mb-2">Meal History</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div className="bg-blue-50 p-3 rounded-md">
             <p className="text-blue-600 font-medium">Total Meals</p>
             <p className="text-2xl font-bold text-blue-900">{meals.length}</p>
@@ -81,8 +109,30 @@ export default function MealAnalysis() {
             <p className="text-2xl font-bold text-green-900">{totalCalories.toLocaleString()}</p>
           </div>
           <div className="bg-purple-50 p-3 rounded-md">
-            <p className="text-purple-600 font-medium">Avg per Meal</p>
+            <p className="text-purple-600 font-medium">Avg Calories/Meal</p>
             <p className="text-2xl font-bold text-purple-900">{averageCaloriesPerMeal}</p>
+          </div>
+          <div className="bg-orange-50 p-3 rounded-md">
+            <p className="text-orange-600 font-medium">Total Macros</p>
+            <p className="text-lg font-bold text-orange-900">
+              P: {totalProtein.toFixed(1)}g<br />
+              C: {totalCarbs.toFixed(1)}g<br />
+              F: {totalFats.toFixed(1)}g
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm mt-4">
+          <div className="bg-red-50 p-3 rounded-md">
+            <p className="text-red-600 font-medium">Avg Protein/Meal</p>
+            <p className="text-xl font-bold text-red-900">{averageProteinPerMeal}g</p>
+          </div>
+          <div className="bg-yellow-50 p-3 rounded-md">
+            <p className="text-yellow-600 font-medium">Avg Carbs/Meal</p>
+            <p className="text-xl font-bold text-yellow-900">{averageCarbsPerMeal}g</p>
+          </div>
+          <div className="bg-indigo-50 p-3 rounded-md">
+            <p className="text-indigo-600 font-medium">Avg Fats/Meal</p>
+            <p className="text-xl font-bold text-indigo-900">{averageFatsPerMeal}g</p>
           </div>
         </div>
       </div>
@@ -110,7 +160,16 @@ export default function MealAnalysis() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4 flex-shrink-0">
-                  <span className="text-sm font-medium text-gray-900">{meal.calories} cal</span>
+                  <div className="text-right">
+                    <span className="text-sm font-medium text-gray-900">{meal.calories} cal</span>
+                    {(meal.protein || meal.carbs || meal.fats) && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {meal.protein && <span>P: {meal.protein}g </span>}
+                        {meal.carbs && <span>C: {meal.carbs}g </span>}
+                        {meal.fats && <span>F: {meal.fats}g</span>}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => handleDelete(meal.id)}
                     className="text-red-600 hover:text-red-900 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"

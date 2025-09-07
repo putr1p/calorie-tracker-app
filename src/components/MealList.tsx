@@ -55,7 +55,16 @@ export default function MealList({ showTodaysMeals = false }: MealListProps) {
                 </div>
               </div>
               <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4 flex-shrink-0">
-                <span className="text-sm font-medium text-gray-900">{meal.calories} cal</span>
+                <div className="text-right">
+                  <span className="text-sm font-medium text-gray-900">{meal.calories} cal</span>
+                  {(meal.protein || meal.carbs || meal.fats) && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {meal.protein && <span>P: {meal.protein}g </span>}
+                      {meal.carbs && <span>C: {meal.carbs}g </span>}
+                      {meal.fats && <span>F: {meal.fats}g</span>}
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={() => handleDelete(meal.id)}
                   className="text-red-600 hover:text-red-900 text-xs sm:text-sm font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors"

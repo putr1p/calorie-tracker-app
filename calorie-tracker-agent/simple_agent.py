@@ -11,8 +11,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class CalorieTrackerAgent:
-    def __init__(self, mcp_host: str = '127.0.0.1', mcp_port: int = 3001):
-        self.mcp_client = MCPClient(mcp_host, mcp_port)
+    def __init__(self, mcp_host: str = '127.0.0.1', mcp_port: int = 3001, jwt_token: str = None):
+        self.mcp_client = MCPClient(mcp_host, mcp_port, jwt_token)
         self.ollama_client = OllamaClient()
         self.conversation_history = []
         logger.info("Calorie Tracker Agent initialized")
@@ -186,13 +186,18 @@ Provide a helpful response. If this is about meals, suggest they ask about speci
         logger.info("Calorie Tracker Agent cleanup completed")
 
 async def main():
+    # Parse command line arguments
+    jwt_token = None
+    if len(sys.argv) > 3:
+        jwt_token = sys.argv[3]
+
     # Check if running with command line arguments (non-interactive mode)
     if len(sys.argv) > 2:
         query = sys.argv[1]
         user_id = sys.argv[2]
 
         # Initialize Calorie Tracker Agent with MCP server connection
-        agent = CalorieTrackerAgent()
+        agent = CalorieTrackerAgent(jwt_token=jwt_token)
 
         try:
             await agent.initialize()
@@ -207,7 +212,7 @@ async def main():
     else:
         # Interactive mode
         # Initialize Calorie Tracker Agent with MCP server connection
-        agent = CalorieTrackerAgent()
+        agent = CalorieTrackerAgent(jwt_token=jwt_token)
 
         try:
             await agent.initialize()

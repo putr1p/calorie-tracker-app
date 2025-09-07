@@ -10,6 +10,9 @@ export interface Meal {
   user_id: number;
   name: string;
   calories: number;
+  protein?: number;
+  carbs?: number;
+  fats?: number;
   created_at: string;
 }
 

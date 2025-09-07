@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByUsername } from '@/lib/db';
+import { generateToken } from '@/lib/jwt';
 
 interface User {
   id: number;
@@ -26,8 +27,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Create a simple session token
-    const token = `session_${user.id}_${Date.now()}`;
+    // Create JWT token
+    const token = generateToken({
+      userId: user.id,
+      username: user.username
+    });
 
     const response = NextResponse.json({
       user: { id: user.id, username: user.username },
