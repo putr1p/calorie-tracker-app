@@ -22,11 +22,9 @@ export async function DELETE(
 
     const userId = decoded.userId;
     const resolvedParams = await params;
-    const mealId = parseInt(resolvedParams.id);
-
-    if (isNaN(mealId)) {
-      return NextResponse.json({ error: 'Invalid meal ID' }, { status: 400 });
-    }
+    const mealId = resolvedParams.id;
+    
+    // Validate UUID format if needed, but for now assume it's valid
 
     const result = deleteMeal(mealId, userId);
 

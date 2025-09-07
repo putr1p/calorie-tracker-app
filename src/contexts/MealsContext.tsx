@@ -4,8 +4,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useAuth } from './AuthContext';
 
 interface Meal {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   name: string;
   calories: number;
   protein?: number;
@@ -20,7 +20,7 @@ interface MealsContextType {
   todaysMeals: Meal[];
   loading: boolean;
   addMeal: (name: string, calories: number, protein?: number | null, carbs?: number | null, fats?: number | null, imageUrl?: string | null) => Promise<void>;
-  deleteMeal: (mealId: number) => Promise<void>;
+  deleteMeal: (mealId: string) => Promise<void>;
   refreshMeals: () => Promise<void>;
 }
 
@@ -123,7 +123,7 @@ export const MealsProvider: React.FC<MealsProviderProps> = ({ children }) => {
     }
   };
 
-  const deleteMeal = async (mealId: number) => {
+  const deleteMeal = async (mealId: string) => {
     try {
       const response = await fetch(`/api/meals/${mealId}`, {
         method: 'DELETE',

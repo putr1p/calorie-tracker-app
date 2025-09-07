@@ -4,8 +4,8 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
 
 interface Meal {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   name: string;
   calories: number;
   date: string;

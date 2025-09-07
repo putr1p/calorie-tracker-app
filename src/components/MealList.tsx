@@ -11,7 +11,7 @@ export default function MealList({ showTodaysMeals = false }: MealListProps) {
 
   const displayMeals = showTodaysMeals ? todaysMeals : meals;
 
-  const handleDelete = async (mealId: number) => {
+  const handleDelete = async (mealId: string) => {
     try {
       await deleteMeal(mealId);
     } catch (error) {

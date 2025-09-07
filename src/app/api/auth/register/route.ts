@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
 
     // Create user
     const userId = createUser(username, password);
-
+    
     // Create JWT token
     const token = generateToken({
-      userId: Number(userId),
+      userId: userId,
       username: username
     });
 

@@ -1,13 +1,13 @@
 export interface User {
-  id: string;
+  id: string; // UUID
   username: string;
   password: string; // In real app, this would be hashed
   createdAt: Date;
 }
 
 export interface Meal {
-  id: number;
-  user_id: number;
+  id: string; // UUID
+  user_id: string; // UUID
   name: string;
   calories: number;
   protein?: number;

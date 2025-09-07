@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import { useMeals } from '@/contexts/MealsContext';
 
 interface Meal {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   name: string;
   calories: number;
   protein?: number;
@@ -21,7 +21,7 @@ export default function MealAnalysis() {
   const { meals, loading, deleteMeal } = useMeals();
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleDelete = async (mealId: number) => {
+  const handleDelete = async (mealId: string) => {
     try {
       await deleteMeal(mealId);
     } catch (error) {

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
 
 interface User {
-  id: number;
+  id: string;
   username: string;
   password: string;
   created_at: string;

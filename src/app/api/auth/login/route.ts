@@ -3,7 +3,7 @@ import { getUserByUsername } from '@/lib/db';
 import { generateToken } from '@/lib/jwt';
 
 interface User {
-  id: number;
+  id: string;
   username: string;
   password: string;
   created_at: string;
