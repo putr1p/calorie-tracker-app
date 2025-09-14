@@ -3,6 +3,7 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
+import logger from '@/lib/logger';
 
 // Helper function to get user from JWT
 async function getUserFromJWT() {
@@ -30,7 +31,8 @@ export async function POST(request: NextRequest) {
     // Get query from request body
     const { query } = await request.json();
     if (!query || typeof query !== 'string') {
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 });
+      logger.error('Chatbot failed: Query is required');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     // Path to the Python agent script
@@ -63,25 +65,23 @@ export async function POST(request: NextRequest) {
           resolve(NextResponse.json({ response: response.trim() }));
         } else {
           // Error
-          console.error('Agent process error:', errorOutput);
+          logger.error('Agent process error:', errorOutput);
           resolve(NextResponse.json({
-            error: 'Agent processing failed',
-            details: errorOutput
+            error: 'Internal server error'
           }, { status: 500 }));
         }
       });
 
       pythonProcess.on('error', (error) => {
-        console.error('Failed to start agent process:', error);
+        logger.error('Failed to start agent process:', error);
         resolve(NextResponse.json({
-          error: 'Failed to start agent',
-          details: error.message
+          error: 'Internal server error'
         }, { status: 500 }));
       });
     });
 
   } catch (error) {
-    console.error('Chatbot API error:', error);
+    logger.error('Chatbot API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

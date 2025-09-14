@@ -3,6 +3,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
+import logger from '@/lib/logger';
 
 // Helper function to get user from JWT
 async function getUserFromJWT() {
@@ -28,19 +29,22 @@ export async function POST(request: NextRequest) {
     const file: File | null = data.get('file') as unknown as File;
 
     if (!file) {
-      return NextResponse.json({ error: 'No file received' }, { status: 400 });
+      logger.error('Upload failed: No file received');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
+      logger.error('Upload failed: Invalid file type');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 5MB.' }, { status: 400 });
+      logger.error('Upload failed: File too large');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     // Generate unique filename
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
+    logger.error('Upload error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

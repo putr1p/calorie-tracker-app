@@ -5,24 +5,54 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import net from 'net';
 import jwt from 'jsonwebtoken';
+import winston from 'winston';
 
 // Get the directory of the current module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Logger setup
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.printf(({ timestamp, level, message, stack }) => {
+    if (stack) {
+      return `${timestamp} [${level.toUpperCase()}]: ${message}\n${stack}`;
+    }
+    return `${timestamp} [${level.toUpperCase()}]: ${message}`;
+  })
+);
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: logFormat,
+  transports: [
+    new winston.transports.File({
+      filename: path.join(__dirname, '../../logs', 'mcp-server.log'),
+      format: logFormat
+    }),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        logFormat
+      )
+    })
+  ]
+});
 
 // JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secure-jwt-secret-key-change-this-in-production-2024';
 
 // Database connection (read-only)
 const dbPath = path.join(__dirname, '../../calorie_tracker.db');
-console.error('Database path:', dbPath);
+logger.info('Database path:', dbPath);
 
 let db;
 try {
   db = new Database(dbPath, { readonly: true });
-  console.error('Database connected successfully');
+  logger.info('Database connected successfully');
 } catch (error) {
-  console.error('Failed to connect to database:', error.message);
+  logger.error('Failed to connect to database:', error.message);
   process.exit(1);
 }
 
@@ -32,7 +62,7 @@ function verifyToken(token) {
     const decoded = jwt.verify(token, JWT_SECRET);
     return decoded;
   } catch (error) {
-    console.error('JWT verification failed:', error.message);
+    logger.error('JWT verification failed:', error.message);
     return null;
   }
 }
@@ -49,7 +79,7 @@ const PORT = 3001 ;
 const HOST = '127.0.0.1';
 
 const server = net.createServer((socket) => {
-  console.error(`Connection from ${socket.remoteAddress}:${socket.remotePort}`);
+  logger.info(`Connection from ${socket.remoteAddress}:${socket.remotePort}`);
 
   let buffer = '';
 
@@ -66,7 +96,7 @@ const server = net.createServer((socket) => {
           const parsedMessage = JSON.parse(message.trim());
           handleMessage(parsedMessage, socket);
         } catch (error) {
-          console.error('Parse error:', error.message);
+          logger.error('Parse error:', error.message);
           sendError(socket, -32700, 'Parse error');
         }
       }
@@ -74,16 +104,16 @@ const server = net.createServer((socket) => {
   });
 
   socket.on('end', () => {
-    console.error(`Connection closed from ${socket.remoteAddress}:${socket.remotePort}`);
+    logger.info(`Connection closed from ${socket.remoteAddress}:${socket.remotePort}`);
   });
 
   socket.on('error', (err) => {
-    console.error('Socket error:', err.message);
+    logger.error('Socket error:', err.message);
   });
 });
 
 server.listen(PORT, HOST, () => {
-  console.error(`MCP server listening on ${HOST}:${PORT}`);
+  logger.info(`MCP server listening on ${HOST}:${PORT}`);
 });
 
 // Define tools
@@ -126,7 +156,7 @@ const tools = [
 function handleMessage(message, socket) {
   const { id, method, params, headers } = message;
 
-  console.error(`[${socket.remoteAddress}:${socket.remotePort}] ${method} request id=${id}`);
+  logger.info(`[${socket.remoteAddress}:${socket.remotePort}] ${method} request id=${id}`);
 
   switch (method) {
     case 'initialize':
@@ -141,12 +171,12 @@ function handleMessage(message, socket) {
         }
       };
       sendResponse(socket, id, initResponse);
-      console.error(`[${socket.remoteAddress}:${socket.remotePort}] initialize completed`);
+      logger.info(`[${socket.remoteAddress}:${socket.remotePort}] initialize completed`);
       break;
 
     case 'tools/list':
       sendResponse(socket, id, { tools });
-      console.error(`[${socket.remoteAddress}:${socket.remotePort}] tools/list completed`);
+      logger.info(`[${socket.remoteAddress}:${socket.remotePort}] tools/list completed`);
       break;
 
     case 'tools/call':
@@ -155,14 +185,14 @@ function handleMessage(message, socket) {
       const token = extractTokenFromAuthHeader(authHeader);
 
       if (!token) {
-        console.error(`[${socket.remoteAddress}:${socket.remotePort}] tools/call: missing authentication`);
+        logger.error(`[${socket.remoteAddress}:${socket.remotePort}] tools/call: missing authentication`);
         sendError(socket, id, 'Authentication required', -32001);
         break;
       }
 
       const decoded = verifyToken(token);
       if (!decoded) {
-        console.error(`[${socket.remoteAddress}:${socket.remotePort}] tools/call: invalid token`);
+        logger.error(`[${socket.remoteAddress}:${socket.remotePort}] tools/call: invalid token`);
         sendError(socket, id, 'Invalid authentication token', -32001);
         break;
       }
@@ -171,7 +201,7 @@ function handleMessage(message, socket) {
       break;
 
     default:
-      console.error(`[${socket.remoteAddress}:${socket.remotePort}] unknown method: ${method}`);
+      logger.error(`[${socket.remoteAddress}:${socket.remotePort}] unknown method: ${method}`);
       sendError(socket, id, 'Method not found', -32601);
   }
 }
@@ -201,7 +231,7 @@ function handleToolCall(socket, id, params, decodedToken) {
         sendResponse(socket, id, {
           content: [{ type: 'text', text: responseText }]
         });
-        console.error(`[${socket.remoteAddress}:${socket.remotePort}] get_user_meals completed for user ${userId}`);
+        logger.info(`[${socket.remoteAddress}:${socket.remotePort}] get_user_meals completed for user ${userId}`);
         break;
       }
 
@@ -221,7 +251,7 @@ function handleToolCall(socket, id, params, decodedToken) {
         sendResponse(socket, id, {
           content: [{ type: 'text', text: responseText }]
         });
-        console.error(`[${socket.remoteAddress}:${socket.remotePort}] get_user_details completed for user ${userId}`);
+        logger.info(`[${socket.remoteAddress}:${socket.remotePort}] get_user_details completed for user ${userId}`);
         break;
       }
 
@@ -244,16 +274,16 @@ function handleToolCall(socket, id, params, decodedToken) {
         sendResponse(socket, id, {
           content: [{ type: 'text', text: responseText }]
         });
-        console.error(`[${socket.remoteAddress}:${socket.remotePort}] get_meal_macros completed for user ${userId}`);
+        logger.info(`[${socket.remoteAddress}:${socket.remotePort}] get_meal_macros completed for user ${userId}`);
         break;
       }
 
       default:
-        console.error(`[${socket.remoteAddress}:${socket.remotePort}] unknown tool: ${name}`);
+        logger.error(`[${socket.remoteAddress}:${socket.remotePort}] unknown tool: ${name}`);
         sendError(socket, id, `Unknown tool: ${name}`, -32601);
     }
   } catch (error) {
-    console.error(`[${socket.remoteAddress}:${socket.remotePort}] tool error: ${error.message}`);
+    logger.error(`[${socket.remoteAddress}:${socket.remotePort}] tool error: ${error.message}`);
     sendError(socket, id, `Database error: ${error.message}`, -32603);
   }
 }
@@ -281,7 +311,7 @@ function sendError(socket, id, message, code = -32000) {
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('Shutting down MCP server...');
+  logger.info('Shutting down MCP server...');
   if (db) {
     db.close();
   }

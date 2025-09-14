@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserById } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
+import logger from '@/lib/logger';
 
 interface User {
   id: string;
@@ -26,6 +27,7 @@ export async function GET() {
 
     const user = getUserById(decoded.userId) as User | undefined;
     if (!user) {
+      logger.error('Auth check failed: User not found');
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
 
@@ -34,7 +36,7 @@ export async function GET() {
       user: { id: user.id, username: user.username }
     });
   } catch (error) {
-    console.error('🚨 Server: Auth check error:', error);
+    logger.error('Auth check error:', error);
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
 }

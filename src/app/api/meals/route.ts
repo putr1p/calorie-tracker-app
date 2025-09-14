@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createMeal, getMealsByUserId } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
+import logger from '@/lib/logger';
 
 interface Meal {
   id: string;
@@ -35,7 +36,7 @@ export async function GET() {
     const meals = getMealsByUserId(userId);
     return NextResponse.json(meals);
   } catch (error) {
-    console.error('Get meals error:', error);
+    logger.error('Get meals error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -50,24 +51,29 @@ export async function POST(request: NextRequest) {
     const { name, calories, protein, carbs, fats, imageUrl } = await request.json();
 
     if (!name || !calories) {
-      return NextResponse.json({ error: 'Name and calories are required' }, { status: 400 });
+      logger.error('Meal creation failed: Name and calories are required');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     if (isNaN(calories) || calories <= 0) {
-      return NextResponse.json({ error: 'Calories must be a positive number' }, { status: 400 });
+      logger.error('Meal creation failed: Calories must be a positive number');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     // Validate macro inputs if provided
     if (protein !== undefined && (isNaN(protein) || protein < 0)) {
-      return NextResponse.json({ error: 'Protein must be a non-negative number' }, { status: 400 });
+      logger.error('Meal creation failed: Protein must be a non-negative number');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     if (carbs !== undefined && (isNaN(carbs) || carbs < 0)) {
-      return NextResponse.json({ error: 'Carbs must be a non-negative number' }, { status: 400 });
+      logger.error('Meal creation failed: Carbs must be a non-negative number');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     if (fats !== undefined && (isNaN(fats) || fats < 0)) {
-      return NextResponse.json({ error: 'Fats must be a non-negative number' }, { status: 400 });
+      logger.error('Meal creation failed: Fats must be a non-negative number');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     // Create meal with automatic timestamping
@@ -76,7 +82,7 @@ export async function POST(request: NextRequest) {
     const meal = meals.find(m => m.id === mealId);
     return NextResponse.json(meal, { status: 201 });
   } catch (error) {
-    console.error('Create meal error:', error);
+    logger.error('Create meal error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

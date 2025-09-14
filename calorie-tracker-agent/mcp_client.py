@@ -1,7 +1,22 @@
 import json
 import asyncio
 import logging
+import os
 from typing import Dict, Any, Optional
+
+# Configure logging
+log_file = os.path.join(os.path.dirname(__file__), '..', 'logs', 'mcp-client.log')
+os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s]: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler()
+    ]
+)
 
 logger = logging.getLogger(__name__)
 

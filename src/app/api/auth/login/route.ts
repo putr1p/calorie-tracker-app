@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByUsername } from '@/lib/db';
 import { generateToken } from '@/lib/jwt';
+import logger from '@/lib/logger';
 
 interface User {
   id: string;
@@ -14,17 +15,20 @@ export async function POST(request: NextRequest) {
     const { username, password } = await request.json();
 
     if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+      logger.error('Login failed: Username and password are required');
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
     }
 
     const user = getUserByUsername(username) as User | undefined;
     if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      logger.error('Login failed: User not found');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // In a real app, you'd hash passwords. For now, we'll store plain text as before
     if (user.password !== password) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      logger.error('Login failed: Invalid password');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Create JWT token
@@ -48,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
